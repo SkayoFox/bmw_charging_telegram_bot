@@ -16,6 +16,11 @@ async def login(mail: str, pw: str, region: str)->MyBMWAccount:
     
     return MyBMWAccount(mail, pw, bmw_region)
 
+async def get_vehicle_state_str(bmwCreds: BMWCreds) -> str:
+    await bmwCreds.account.get_vehicles()
+    vehicle = bmwCreds.account.get_vehicle(bmwCreds.vin)
+    return "Couldn't start charging.\nSoC: " + str(vehicle.fuel_and_battery.remaining_battery_percent) + "%\nTarget: " + str(vehicle.fuel_and_battery.charging_target) + "%\nCharging state: " + str(vehicle.fuel_and_battery.charging_status) + "\nCharger connected: " + str(vehicle.fuel_and_battery.is_charger_connected)
+
 async def start_charge(job: ChargeJob):
     await job.bmwCreds.account.get_vehicles()
     vehicle = job.bmwCreds.account.get_vehicle(job.bmwCreds.vin)

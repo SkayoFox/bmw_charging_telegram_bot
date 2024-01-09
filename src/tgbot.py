@@ -24,26 +24,27 @@ async def cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ("state" not in context.user_data):
         context.user_data["state"] = "0"
     
-    if (update.message.text.upper() == "CANCEL"):
-        if context.user_data["state"].startswith("login"):
-            if "bmw_creds" in context.user_data:
-                del context.user_data["bmw_creds"]
-        context.user_data["state"] = "0"
-        await send_reply(update, context, "Operation was canceled")
-        return
+    match update.message.text.upper():
+        case "CANCEL":
+            if context.user_data["state"].startswith("login"):
+                if globalDefs.userdata_creds in context.user_data:
+                    del context.user_data[globalDefs.userdata_creds]
+            context.user_data["state"] = "0"
+            await send_reply(update, context, "Operation was canceled")
+            return
 
-    if (update.message.text.upper() == "CHARGE"):
-        await commands.charge_prompt(update, context)
-        return
+        case "CHARGE":
+            await commands.charge_prompt(update, context)
+            return
 
-    if (update.message.text.upper() == "STOP"):
-        await commands.stop_prompt(update, context)
-        return
-    
-    else:
-        handled = await commands.handle_state(update, context)
-        if not handled:
-            await send_reply(update, context, "Unknown command")
+        case "STOP":
+            await commands.stop_prompt(update, context)
+            return
+        
+        case _:
+            handled = await commands.handle_state(update, context)
+            if not handled:
+                await send_reply(update, context, "Unknown command")
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -52,6 +53,13 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await commands.handle_vin_select(update, context, query)
     elif context.user_data["state"].startswith("jobs"):
         await commands.handle_job_delete(update, context, query)
+
+async def state_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await commands.check_login(update, context):
+        return
+    
+    state_str = await bmwhandler.get_vehicle_state_str(context.user_data[globalDefs.userdata_creds])
+    send_reply(update, context, state_str)
 
 async def login_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_reply(update, context, "Please enter your Mail")
@@ -98,6 +106,7 @@ if __name__ == '__main__':
     start_handler = CommandHandler('start', start_cmd)
     charge_handler = CommandHandler('charge', charge_cmd)
     stop_handler = CommandHandler('stop', stop_cmd)
+    state_handler = CommandHandler('state', state_cmd)
     login_handler = CommandHandler('login', login_cmd)
     jobs_handler = CommandHandler('jobs', jobs_cmd)
 
@@ -105,6 +114,7 @@ if __name__ == '__main__':
     application.add_handler(start_handler)
     application.add_handler(charge_handler)
     application.add_handler(stop_handler)
+    application.add_handler(state_handler)
     application.add_handler(login_handler)
     application.add_handler(jobs_handler)
     application.add_handler(message_handler)
