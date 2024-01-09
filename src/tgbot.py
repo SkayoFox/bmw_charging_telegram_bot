@@ -23,28 +23,27 @@ logging.basicConfig(
 async def cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ("state" not in context.user_data):
         context.user_data["state"] = "0"
+
+    if update.message.text.upper() == "CANCEL":
+        if context.user_data["state"].startswith("login"):
+            if globalDefs.userdata_creds in context.user_data:
+                del context.user_data[globalDefs.userdata_creds]
+        context.user_data["state"] = "0"
+        await send_reply(update, context, "Operation was canceled")
+        return
+
+    elif update.message.text.upper() == "CHARGE":
+        await commands.charge_prompt(update, context)
+        return
+
+    elif update.message.text.upper() == "STOP":
+        await commands.stop_prompt(update, context)
+        return
     
-    match update.message.text.upper():
-        case "CANCEL":
-            if context.user_data["state"].startswith("login"):
-                if globalDefs.userdata_creds in context.user_data:
-                    del context.user_data[globalDefs.userdata_creds]
-            context.user_data["state"] = "0"
-            await send_reply(update, context, "Operation was canceled")
-            return
-
-        case "CHARGE":
-            await commands.charge_prompt(update, context)
-            return
-
-        case "STOP":
-            await commands.stop_prompt(update, context)
-            return
-        
-        case _:
-            handled = await commands.handle_state(update, context)
-            if not handled:
-                await send_reply(update, context, "Unknown command")
+    else:
+        handled = await commands.handle_state(update, context)
+        if not handled:
+            await send_reply(update, context, "Unknown command")
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
