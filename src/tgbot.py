@@ -59,7 +59,7 @@ async def state_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     state_str = await bmwhandler.get_vehicle_state_str(context.user_data[globalDefs.userdata_creds])
-    send_reply(update, context, state_str)
+    await send_reply(update, context, state_str)
 
 async def login_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_reply(update, context, "Please enter your Mail")
@@ -88,7 +88,7 @@ async def jobs_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["state"] = "jobs_1"
 
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_reply(update, context, "BMW timed charging bot\nFirst, you have to login to your BMW Connected drive account. These credentials are only stored in RAM on the server, so you may have to enter them again later. Enter /login to get the login-promt.\nAfter that, enter /charge to schedule a new charging job\nEnter /jobs to get all planned charging jobs\nWith /stop you can stop charging and remove all scheduled jobs\n\nThis bot can't do anything else.\n\nYou can cancel any operation by typing 'cancel' btw.")
+    await send_reply(update, context, "BMW timed charging bot\nFirst, you have to login to your BMW Connected drive account. These credentials are only stored in RAM on the server, so you may have to enter them again later. Enter /login to get the login-promt.\nAfter that, enter /charge to schedule a new charging job\nEnter /jobs to get all planned charging jobs\nWith /stop you can stop charging and remove all scheduled jobs\n With /state you can see the current charging state of the car\n\nThis bot can't do anything else.\n\nYou can cancel any operation by typing 'cancel' btw.")
 
 async def stop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await commands.check_login(update, context):

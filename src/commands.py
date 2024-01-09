@@ -7,8 +7,8 @@ from globalDefs import BMWCreds, ChargeJob
 from tgbot import send_reply, send_reply_with_keyboard, send_message
 
 async def check_login(update: Update, context: ContextTypes.DEFAULT_TYPE)->bool:
-    if "bmw_creds" in context.user_data:
-        bmwcreds: BMWCreds = context.user_data["bmw_creds"]
+    if globalDefs.userdata_creds in context.user_data:
+        bmwcreds: BMWCreds = context.user_data[globalDefs.userdata_creds]
         if len(bmwcreds.vin) > 0:
             return True
     await send_message(update, context, "Please login first using /login")
@@ -24,7 +24,7 @@ async def stop_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_login(update, context):
         return
     job = ChargeJob()
-    job.bmwCreds = context.user_data["bmw_creds"]
+    job.bmwCreds = context.user_data[globalDefs.userdata_creds]
     job.chatContext = context
     job.chatUpdate = update
     await bmwhandler.end_charge(job)
@@ -53,12 +53,12 @@ async def handle_login_states(update: Update, context: ContextTypes.DEFAULT_TYPE
     if context.user_data["state"] == "login_1":
         bmwcreds = BMWCreds()
         bmwcreds.mail = update.message.text
-        context.user_data["bmw_creds"] = bmwcreds
+        context.user_data[globalDefs.userdata_creds] = bmwcreds
         await send_reply(update, context, "Please enter your password")
         context.user_data["state"] = "login_2"
 
     elif context.user_data["state"] == "login_2":
-        bmwcreds: BMWCreds = context.user_data["bmw_creds"]
+        bmwcreds: BMWCreds = context.user_data[globalDefs.userdata_creds]
         bmwcreds.password = update.message.text
         await update.message.delete()
         markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="CN - China"), KeyboardButton(text="NA - North America")], [KeyboardButton(text="RW - Rest of the world")]])
@@ -66,7 +66,7 @@ async def handle_login_states(update: Update, context: ContextTypes.DEFAULT_TYPE
         context.user_data["state"] = "login_3"
 
     elif context.user_data["state"] == "login_3":
-        bmwcreds: BMWCreds = context.user_data["bmw_creds"]
+        bmwcreds: BMWCreds = context.user_data[globalDefs.userdata_creds]
         bmwcreds.region = update.message.text[0:2]
         bmwcreds.account = await bmwhandler.login(bmwcreds.mail, bmwcreds.password, bmwcreds.region)
         success = False
@@ -95,7 +95,7 @@ async def handle_vin_select(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     if context.user_data["state"] != "login_4":
          await send_message(update, context, "Please run /login again to change the VIN")
     else:
-        bmwcreds: BMWCreds = context.user_data["bmw_creds"]
+        bmwcreds: BMWCreds = context.user_data[globalDefs.userdata_creds]
         bmwcreds.vin = query.data
         await send_message(update, context, "You selected VIN " + bmwcreds.vin + "\nSetup is now complete")
         context.user_data["state"] = "0"
@@ -145,7 +145,7 @@ async def handle_charging_states(update: Update, context: ContextTypes.DEFAULT_T
             chargeJob.startJob = globalDefs.jobs.add_job(bmwhandler.start_charge, "date", run_date=context.user_data["fromTime"], args=[chargeJob])
             chargeJob.endJob = globalDefs.jobs.add_job(bmwhandler.end_charge, "date", run_date=context.user_data["toTime"], args=[chargeJob])
             chargeJob.endCharge = True
-            chargeJob.bmwCreds = context.user_data["bmw_creds"]
+            chargeJob.bmwCreds = context.user_data[globalDefs.userdata_creds]
             if globalDefs.userdata_jobs not in context.user_data:
                 context.user_data[globalDefs.userdata_jobs] = []
             context.user_data[globalDefs.userdata_jobs].append(chargeJob)
