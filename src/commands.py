@@ -28,11 +28,12 @@ async def stop_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     job.chatContext = context
     job.chatUpdate = update
     await bmwhandler.end_charge(job)
-    for job2 in context.user_data[globalDefs.userdata_jobs]:
-        job2.startJob.remove()
-        job2.endJob.remove()
-    context.user_data[globalDefs.userdata_jobs].clear()
-    context.user_data["state"] = "charge_1"
+    if globalDefs.userdata_jobs in context.user_data:
+        for job2 in context.user_data[globalDefs.userdata_jobs]:
+            job2.startJob.remove()
+            job2.endJob.remove()
+        context.user_data[globalDefs.userdata_jobs].clear()
+    context.user_data["state"] = "0"
 
 async def cancel_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data["state"] == "0":
