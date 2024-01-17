@@ -11,7 +11,8 @@ import globalDefs
 import credentials
 from datetime import datetime
 from globalDefs import ChargeJob
-from tgmethods import send_message, send_reply, send_reply_with_keyboard
+from tgmethods import send_message, send_reply, send_reply_with_keyboard, getScreen, setScreen, getOrCreateLastMessage
+import screens
 
 globalDefs.jobs = AsyncIOScheduler()
 
@@ -47,7 +48,13 @@ async def cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+    screen = getScreen(context)
+    if screen != None:
+        await screen.buttonClicked(query)
+        return
+    
     await query.answer()
+    
     if context.user_data["state"].startswith("login"):
         await commands.handle_vin_select(update, context, query)
     elif context.user_data["state"].startswith("jobs"):
@@ -86,6 +93,11 @@ async def jobs_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_reply_with_keyboard(update, context, text, markup)
     context.user_data["state"] = "jobs_1"
 
+async def test_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    screen = setScreen(context, screens.MainScreen(update, context))
+    #await send_reply_with_keyboard(update, context, "Test", None)
+    await screen.render(await getOrCreateLastMessage(context))
+
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_reply(update, context, "BMW timed charging bot\nFirst, you have to login to your BMW Connected drive account. These credentials are only stored in RAM on the server, so you may have to enter them again later. Enter /login to get the login-promt.\nAfter that, enter /charge to schedule a new charging job\nEnter /jobs to get all planned charging jobs\nWith /stop you can stop charging and remove all scheduled jobs\n With /state you can see the current charging state of the car\n\nThis bot can't do anything else.\n\nYou can cancel any operation by typing 'cancel' btw.")
 
@@ -108,6 +120,7 @@ if __name__ == '__main__':
     state_handler = CommandHandler('state', state_cmd)
     login_handler = CommandHandler('login', login_cmd)
     jobs_handler = CommandHandler('jobs', jobs_cmd)
+    test_handler = CommandHandler('test', test_cmd)
 
     message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), cmd)
     application.add_handler(start_handler)
@@ -117,6 +130,7 @@ if __name__ == '__main__':
     application.add_handler(login_handler)
     application.add_handler(jobs_handler)
     application.add_handler(message_handler)
+    application.add_handler(test_handler)
     application.add_handler(CallbackQueryHandler(handle_button))
 
     globalDefs.jobs.start()

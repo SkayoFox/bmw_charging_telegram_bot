@@ -7,6 +7,7 @@ from telegram.ext import ContextTypes
 
 userdata_jobs = "charging_job"
 userdata_creds = "bmw_creds"
+userdata_screen = "screen"
 
 class BMWCreds:
     password : str
